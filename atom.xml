@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Sc0ut_2</title>
+  
+  
+  <link href="http://example.com/atom.xml" rel="self"/>
+  
+  <link href="http://example.com/"/>
+  <updated>2023-01-08T03:52:42.439Z</updated>
+  <id>http://example.com/</id>
+  
+  <author>
+    <name>zyy</name>
+    
+  </author>
+  
+  <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title></title>
+    <link href="http://example.com/2023/01/08/Welcome%20file/"/>
+    <id>http://example.com/2023/01/08/Welcome%20file/</id>
+    <published>2023-01-08T03:52:42.402Z</published>
+    <updated>2023-01-08T03:52:42.439Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="欢迎来到-Sc0ut-2的blog！"><a href="#欢迎来到-Sc0ut-2的blog！" class="headerlink" title="欢迎来到 Sc0ut_2的blog！"></a>欢迎来到 Sc0ut_2的blog！</h1><pre><code>功能尚未完善</code></pre>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;h1 id=&quot;欢迎来到-Sc0ut-2的blog！&quot;&gt;&lt;a href=&quot;#欢迎来到-Sc0ut-2的blog！&quot; class=&quot;headerlink&quot; title=&quot;欢迎来到 Sc0ut_2的blog！&quot;&gt;&lt;/a&gt;欢迎来到 Sc0ut_2的blog！&lt;/h1&gt;&lt;pre&gt;&lt;cod</summary>
+      
+    
+    
+    
+    
+  </entry>
+  
+</feed>
