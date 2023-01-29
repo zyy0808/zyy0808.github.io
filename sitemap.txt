@@ -3,5 +3,5 @@ http://example.com/categories/index.html
 http://example.com/2023/01/09/Hgame2023-week1-WP/
 http://example.com/tags/index.html
 http://example.com/
-http://example.com/categories/%E8%B5%9B%E4%BA%8BWP/
 http://example.com/categories/%E7%94%9F%E6%B4%BB%E9%9A%8F%E7%AC%94/
+http://example.com/categories/%E8%B5%9B%E4%BA%8BWP/
