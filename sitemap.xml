@@ -11,7 +11,7 @@
   </url>
   
   <url>
-    <loc>http://example.com/2023/03/22/php%E7%89%B9%E6%80%A7/</loc>
+    <loc>http://example.com/2023/03/20/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/</loc>
     
     <lastmod>2023-03-22</lastmod>
     
@@ -20,9 +20,9 @@
   </url>
   
   <url>
-    <loc>http://example.com/2023/03/20/%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C/</loc>
+    <loc>http://example.com/2023/03/22/php%E7%89%B9%E6%80%A7/</loc>
     
-    <lastmod>2023-03-20</lastmod>
+    <lastmod>2023-03-22</lastmod>
     
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
