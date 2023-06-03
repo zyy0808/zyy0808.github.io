@@ -1,13 +1,8 @@
 http://example.com/2023/05/30/2021%E7%AC%AC%E4%BA%94%E7%A9%BA%E9%97%B4/
-http://example.com/2023/02/01/CTFshow-web%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86/
-http://example.com/2023/04/29/HDCTF%202023/
 http://example.com/link/index.html
-http://example.com/2023/01/28/%E5%86%99%E5%9C%A82023%E5%B9%B4%E5%A4%A7%E5%B9%B4%E5%88%9D%E4%B8%83/
 http://example.com/categories/index.html
 http://example.com/2023/01/09/Hgame2023-week1-WP/
 http://example.com/tags/index.html
 http://example.com/
-http://example.com/categories/%E8%B5%9B%E4%BA%8Bwp/
-http://example.com/categories/%E5%88%B7%E9%A2%98%E8%AE%B0%E5%BD%95/
 http://example.com/categories/%E8%B5%9B%E4%BA%8BWP/
-http://example.com/categories/%E7%94%9F%E6%B4%BB%E9%9A%8F%E7%AC%94/
+http://example.com/categories/%E8%B5%9B%E4%BA%8Bwp/
