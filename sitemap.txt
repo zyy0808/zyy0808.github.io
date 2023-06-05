@@ -1,9 +1,9 @@
-http://example.com/2023/06/05/NSSRound13%20Web%20%E5%A4%8D%E7%8E%B0/
+http://example.com/2023/06/05/NSSRound#13%20Web%20%E5%A4%8D%E7%8E%B0/
 http://example.com/2023/05/30/2021%E7%AC%AC%E4%BA%94%E7%A9%BA%E9%97%B4/
 http://example.com/link/index.html
 http://example.com/categories/index.html
 http://example.com/2023/01/09/Hgame2023-week1-WP/
 http://example.com/tags/index.html
 http://example.com/
-http://example.com/categories/%E8%B5%9B%E4%BA%8Bwp/
 http://example.com/categories/%E8%B5%9B%E4%BA%8BWP/
+http://example.com/categories/%E8%B5%9B%E4%BA%8Bwp/
