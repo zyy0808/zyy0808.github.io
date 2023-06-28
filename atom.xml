@@ -6,7 +6,7 @@
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2023-06-27T09:27:58.103Z</updated>
+  <updated>2023-06-28T09:03:34.917Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -15,6 +15,28 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>ctf文件上传小结</title>
+    <link href="http://example.com/2023/06/28/ctf%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E4%B8%AA%E4%BA%BA%E6%80%BB%E7%BB%93/"/>
+    <id>http://example.com/2023/06/28/ctf%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E4%B8%AA%E4%BA%BA%E6%80%BB%E7%BB%93/</id>
+    <published>2023-06-28T08:52:26.848Z</published>
+    <updated>2023-06-28T09:03:34.917Z</updated>
+    
+    <content type="html"><![CDATA[<p>本文依据ctfshow 文件上传篇题目总结 ，后续仍会持续更新</p><h3 id="基本姿势"><a href="#基本姿势" class="headerlink" title="基本姿势"></a>基本姿势</h3><p>首先，文件上传类的题目基本思路是</p><p>上传一个木马文件，让服务器以php文件解析</p><p>这样就可以让文件携带任何恶意命令上传进去</p><h3 id="各种过滤及绕过方法"><a href="#各种过滤及绕过方法" class="headerlink" title="各种过滤及绕过方法"></a>各种过滤及绕过方法</h3><p>1.前端过滤:  最常见的就是前端过滤，限制上传文件的类型</p><p>​这种限制直接抓包，然后在包里修改文件类型即可</p><p>2.后端过滤; 后端过滤一般是过滤一些关键词，如 <code>php</code> , <code>eval</code> 等等</p><p>​过滤关键词的话，其实通过命令执行的训练 有很多方法可以达到想要的效果</p><p>​如果是过滤 php，那么正常的标签 <?php  ?>就无法使用</p><p>​可以考虑段标签绕过</p><p>​如  <code>&lt;?=  ?&gt;</code>      </p><p>​<code>&lt;script language=&#39;php&#39;&gt; system(&#39;ls&#39;);&lt;/script&gt;</code></p><p>3.将文件后缀改为php后，服务器不解析</p><p>​这时候可以考虑上传配置文件</p><p>​.hatcass  是apache 服务器上的配置文件</p><p>​.user.ini 是nginx 服务器上的配置文件</p><p>​这种配置文件，可以将指定文件或者指定类型的文件，以php格式解析</p><p>​     并且在执行命令前先包配置文件中指定文件 ，类似于 include(shell.php);</p><p>​那么就带来一个使用条件，就是，同一级目录下必须要有可以访问的php文件</p><p>​如 在upload目录下有index.php文件 </p><p>​那在上传完配置文件之后 ，访问 &#x2F;upload&#x2F;index.php 时，就会先解析木马文件</p><p>4.日志包含</p><p>​    如果后端过滤较为严格，各种执行命令的函数都被禁用</p><p>   这时候可以使用日志包含</p><p>   在上传的木马文件中 ，inlcude(&#x2F;var&#x2F;log&#x2F;nginx&#x2F;access.log)  （以ngnix服务器为例）</p><p>   接着在访问 access.log 时，在 user-agent里写入一句话木马</p><p>​    蚁剑链接即可</p><p>5.软连接问题</p><p>​今年ciscn中有一道 unzip ，是上传压缩包</p><p>​软连接是linux中一个常用命令，类型于windows系统中的快捷方式</p><p>​它的功能是为某一个文件在另外一个位置建立一个同步的连接</p><p>​我们可以先创建一个 shell 文件夹</p><p>​<code>ln -s  /var/www/html   shell</code>     就创建了一个软连接</p><p>​此时，我们对 shell 文件夹的任何操作 ，都会作用到  &#x2F;var&#x2F;www&#x2F;html 文件夹下</p><p>​ 先将 shell 文件夹上传</p><p>​ 接着，我们在本地的 shell 文件夹下创建一个木马文件 1.php</p><p>​  再将 shell 文件夹上传 </p><p>​       此时，新的shell 会替代 旧的shell ，但是由于之前创建的软链接</p><p>​  我们 shell 文件夹下的 1.php 木马文件，也同样上传到了 &#x2F;var&#x2F;www&#x2F;html 文件夹中</p><p>​  此时，直接访问1.php 即可执行任意命令</p><p>小tip：可以在上传文件前  加上  GIF89a</p><p>​来达到绕过文件头的校验</p><p>​php中有一个  <code>getimagesize()</code> 函数， 通过识别文件头来识别文件的格式</p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;p&gt;本文依据ctfshow 文件上传篇题目总结 ，后续仍会持续更新&lt;/p&gt;
+&lt;h3 id=&quot;基本姿势&quot;&gt;&lt;a href=&quot;#基本姿势&quot; class=&quot;headerlink&quot; title=&quot;基本姿势&quot;&gt;&lt;/a&gt;基本姿势&lt;/h3&gt;&lt;p&gt;首先，文件上传类的题目基本思路是&lt;/p&gt;
+&lt;p</summary>
+      
+    
+    
+    
+    
+  </entry>
   
   <entry>
     <title>ctf命令执行小结</title>
