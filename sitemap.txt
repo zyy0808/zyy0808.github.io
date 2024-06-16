@@ -6,6 +6,6 @@ http://example.com/link/index.html
 http://example.com/categories/index.html
 http://example.com/tags/index.html
 http://example.com/
-http://example.com/categories/CTF/
 http://example.com/categories/%E8%B5%9B%E4%BA%8Bwp/
+http://example.com/categories/CTF/
 http://example.com/categories/%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F/
