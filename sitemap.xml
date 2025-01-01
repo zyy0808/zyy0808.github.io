@@ -2,45 +2,9 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://example.com/2024/06/17/ntds.dit%E6%96%87%E4%BB%B6/</loc>
+    <loc>http://example.com/2025/01/01/java_sec/</loc>
     
-    <lastmod>2024-06-16</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://example.com/2024/06/16/lsass%E8%BF%9B%E7%A8%8B/</loc>
-    
-    <lastmod>2024-06-16</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://example.com/2024/06/16/ctf%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E4%B8%AA%E4%BA%BA%E6%80%BB%E7%BB%93/</loc>
-    
-    <lastmod>2024-06-15</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://example.com/2024/06/16/ctf%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%E4%B8%AA%E4%BA%BA%E6%80%BB%E7%BB%93/</loc>
-    
-    <lastmod>2024-06-15</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://example.com/2024/06/16/2021%E7%AC%AC%E4%BA%94%E7%A9%BA%E9%97%B4/</loc>
-    
-    <lastmod>2024-06-15</lastmod>
+    <lastmod>2025-01-01</lastmod>
     
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -49,7 +13,16 @@
   <url>
     <loc>http://example.com/link/index.html</loc>
     
-    <lastmod>2024-06-15</lastmod>
+    <lastmod>2025-01-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://example.com/about/index.html</loc>
+    
+    <lastmod>2025-01-01</lastmod>
     
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -76,7 +49,7 @@
 
   <url>
     <loc>http://example.com/</loc>
-    <lastmod>2024-12-13</lastmod>
+    <lastmod>2025-01-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -85,22 +58,8 @@
 
   
   <url>
-    <loc>http://example.com/categories/CTF/</loc>
-    <lastmod>2024-12-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>http://example.com/categories/%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F/</loc>
-    <lastmod>2024-12-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>http://example.com/categories/%E8%B5%9B%E4%BA%8Bwp/</loc>
-    <lastmod>2024-12-13</lastmod>
+    <loc>http://example.com/categories/%E5%BF%83%E5%BE%97%E4%B8%8E%E4%BD%93%E4%BC%9A/</loc>
+    <lastmod>2025-01-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
